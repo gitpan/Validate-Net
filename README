@@ -26,13 +26,23 @@ DESCRIPTION
     method.
 
 METHODS
-  ip( $ip, @options )
+  host( $host )
+    The "host" method is used to see if a value is a valid host. That is, it
+    is either a domain name, or an ip address.
+
+  domain( $domain )
+    The "domain" method is used to check for a valid domain name.
+
+  ip( $ip )
     The "ip" method is used to validate the format, and more, of an ip
     address. If called with no options, it will just do a basic format check
     of the ip, checking that it conforms to the basic dotted quad format.
     Depending on the options, additional checks may be made.
 
-    There are no options available at this time.
+    No options are available at this time
+
+  port( $port )
+    The "port" method is used to test for a valid port number.
 
 BUGS
     Unknown

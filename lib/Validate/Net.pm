@@ -12,7 +12,7 @@ use base qw{Class::Default};
 # Globals
 use vars qw{$VERSION $errstr $reason};
 BEGIN {
-	$VERSION = 0.2;
+	$VERSION = 0.3;
 	$errstr = '';
 	$reason = '' 
 }
@@ -56,6 +56,7 @@ sub depth {
 #####################################################################
 # Testing
 
+# Validate an ip address
 sub ip {
 	my $self = shift->_self;
 	my $ip = shift or return undef;
@@ -65,7 +66,7 @@ sub ip {
 		
 	# First, do a basic character test.
 	# Just what we can get away with in a regex.
-	unless ( $ip =~ /^[1-9]\d{0,2}(?:\.[1-9]\d{0,2}){3}$/ ) {
+	unless ( $ip =~ /^[0-9]\d{0,2}(?:\.[0-9]\d{0,2}){3}$/ ) {
 		return $self->withReason( 'Does not fit the basic dotted quad format for an ip' );
 	}
 
@@ -82,9 +83,82 @@ sub ip {
 	return 1;
 }
 
+# Validate a domain name
+sub domain {
+	my $self = shift->_self;
+	my $domain = lc shift or return undef;
+	
+	# First, do a quick check for any invalid characters
+	if ( $domain =~ /[^a-z0-9\.-]/ ) {
+		return $self->withReason( 'The domain contained invalid characters' );
+	}
+	
+	# Split into parts in preperation for the remaining tests
+	my @segments = split /\./, $domain;
+	
+	# Check each segment individually
+	foreach my $segment ( @segments ) {
+		# Segment must contain at least one alphabetical character
+		if ( $segment =~ /[^a-z]/ ) {
+			return $self->withReason( 'Domain sections must contain at least one alphabetical character' );
+		}
+		
+		# Does the segment start or end with a dash, or have two dashes in a row
+		if ( $segment =~ /^-/ ) {
+			return $self->withReason( 'Domain sections cannot start with a dash' );
+		}
+		if ( $segment =~ /-$/ ) {
+			return $self->withReason( 'Domain sections cannot end with a dash' );
+		}
+		if ( $segment =~ /--/ ) {
+			return $self->withReason( 'Domain sections cannot have two dashes in a row' );
+		}
+	}
+	
+	# Done, looks good
+	return 1;
+}
+		
+# Validate a host.
+# A host is EITHER an ip address, or a domain
+sub host {
+	my $self = shift->_self;
+	my $host = shift;
+	
+	# Does it look like an ip
+	if ( $host =~ /^[\d\.]+$/ ) {
+		return $self->ip( $host );
+	} else {
+		return $self->domain( $host );
+	}
+}
 
+# Validate a port number
+sub port {
+	my $self = shift->_self;
+	my $port = shift;
+	
+	# A port must be all numbers
+	if ( $port =~ /[^0-9]/ ) {
+		return $self->withReason( 'A port number must be an integer' );
+	}
+	
+	# A port cannot start with 0
+	if ( $port =~ /^0/ ) {
+		return $self->withReason( 'A port number cannot start with zero' );
+	}
+	
+	# A port must be less than 65535
+	if ( $port > 65535 ) {
+		return $self->withReason( 'The port number is too high' );
+	}
+	
+	# Otherwise OK
+	return 1;
+}
 
-
+		
+	
 
 #####################################################################
 # Error and Message Handling
@@ -132,14 +206,27 @@ method.
 
 =head1 METHODS
 
-=head2 ip( $ip, @options )
+=head2 host( $host )
+
+The C<host> method is used to see if a value is a valid host. That is, it is
+either a domain name, or an ip address.
+
+=head2 domain( $domain )
+
+The C<domain> method is used to check for a valid domain name.
+
+=head2 ip( $ip )
 
 The C<ip> method is used to validate the format, and more, of an ip address.
 If called with no options, it will just do a basic format check of the ip, 
 checking that it conforms to the basic dotted quad format. Depending on the
 options, additional checks may be made.
 
-There are no options available at this time.
+No options are available at this time
+
+=head2 port( $port )
+
+The C<port> method is used to test for a valid port number.
 
 =head1 BUGS
 

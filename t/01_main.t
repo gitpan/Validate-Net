@@ -8,7 +8,7 @@ use strict;
 use lib '../../../modules'; # For development testing
 use lib '../lib'; # For installation testing
 use UNIVERSAL 'isa';
-use Test::Simple tests => 4;
+use Test::Simple tests => 5;
 use Class::Inspector;
 
 # Set up any needed globals
@@ -41,7 +41,10 @@ ok( 1, 'Validate::Net loads' );
 
 
 # Create a bunch of basic "good" and "bad" ips
-my @good = qw{1.2.3.4};
+my @good = qw{
+	1.2.3.4
+	0.0.0.0
+	};
 my @bad = qw{1.2.3};
 
 # Check the good and bad ips

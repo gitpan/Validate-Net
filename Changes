@@ -1,5 +1,8 @@
 Revision history for Perl extension Validate::Net.
 
+0.2  Mon April 14 8:29:21 2003
+	- Updated to better comply with the RFCs
+
 0.1  Fri July 12 21:01:52 2002
 	- original version
 

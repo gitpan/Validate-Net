@@ -12,9 +12,9 @@ use base qw{Class::Default};
 # Globals
 use vars qw{$VERSION $errstr $reason};
 BEGIN {
-	$VERSION = 0.3;
+	$VERSION = 0.4;
 	$errstr = '';
-	$reason = '' 
+	$reason = ''
 }
 
 
@@ -27,12 +27,12 @@ BEGIN {
 sub new {
 	my $class = shift;
 	my $depth = shift || 'local';
-	
+
 	# Create the validtor object
 	my $self = bless {
 		depth => undef,
 		}, $class;
-	
+
 	# Set the depth
 	$self->depth( $depth ) or return undef;
 	return $self;
@@ -40,10 +40,14 @@ sub new {
 
 sub depth {
 	my $self = shift;
+	unless ( ref $self ) {
+		return $self->andError( "Cannot change the depth of the default object. You should instantiate instead" );
+	}
+
 	my $depth = shift;
 	return $self->{depth} unless defined $depth;
 	unless ( $depth eq 'fast' or $depth eq 'local' or $depth eq 'full' ) {
-		return $self->andError( "Invalid depth '$depth'" );
+		return $self->andError( "Invalid depth '$depth'. Valid depths are 'fast', 'local'(default) or 'full'" );
 	}
 	$self->{depth} = $depth;
 	return 1;
@@ -60,10 +64,10 @@ sub depth {
 sub ip {
 	my $self = shift->_self;
 	my $ip = shift or return undef;
-	
+
 	# Clear the reason
 	$reason = '';
-		
+
 	# First, do a basic character test.
 	# Just what we can get away with in a regex.
 	unless ( $ip =~ /^[0-9]\d{0,2}(?:\.[0-9]\d{0,2}){3}$/ ) {
@@ -72,61 +76,83 @@ sub ip {
 
 	# Split into parts in preperation for the remaining tests
 	my @quad = split /\./, $ip;
-	
+
 	# Make sure the basic numeric range is ok
 	if ( scalar grep { $_ > 255 } @quad ) {
 		return $self->withReason( 'The maximum value for an ip element is 255' );
 	}
 
-	### Insert more tests
+	# End of the fast tests
+	return 1 if $self->{depth} eq 'fast';
+
+	### Add tests for options
 
 	return 1;
 }
 
-# Validate a domain name
+# Validate a full or partial domain name, or just a host name
 sub domain {
 	my $self = shift->_self;
 	my $domain = lc shift or return undef;
-	
-	# First, do a quick check for any invalid characters
+
+	# Do a quick check for any invalid characters, or basic problems
 	if ( $domain =~ /[^a-z0-9\.-]/ ) {
-		return $self->withReason( 'The domain contained invalid characters' );
+		return $self->withReason( "Domain '$domain' contains invalid characters" );
 	}
-	
-	# Split into parts in preperation for the remaining tests
-	my @segments = split /\./, $domain;
-	
-	# Check each segment individually
-	foreach my $segment ( @segments ) {
-		# Segment must contain at least one alphabetical character
-		if ( $segment =~ /[^a-z]/ ) {
-			return $self->withReason( 'Domain sections must contain at least one alphabetical character' );
+	if ( $domain =~ /\.\./ ) {
+		return $self->withReason( "Domain '$domain' contains consecutive dots" );
+	}
+	if ( $domain =~ /^\./ ) {
+		return $self->withReason( "Domain '$domain' cannot start with a dot" );
+	}
+
+	# The use of a trailing dot is allowed, but we remove it for testing purposes.
+	$domain =~ s/\.$//;
+
+	# Split into elements
+	my @elements = split /\./, $domain;
+
+	# Check each element individually
+	foreach my $element ( @elements ) {
+		# Segments can be no more than 63 characters
+		if ( length $element > 63 ) {
+			return $self->withReason( "Domain section '$element' cannot be longer than 63 characters" );
 		}
-		
-		# Does the segment start or end with a dash, or have two dashes in a row
-		if ( $segment =~ /^-/ ) {
-			return $self->withReason( 'Domain sections cannot start with a dash' );
+
+		# Segments are allowed to contain only digits
+		next if $element =~ /^\d+$/;
+
+		# Segment must start with a letter
+		if ( $element !~ /^[a-z]/ ) {
+			return $self->withReason( "Domain section '$element' must start with a letter" );
 		}
-		if ( $segment =~ /-$/ ) {
-			return $self->withReason( 'Domain sections cannot end with a dash' );
+
+		# Segment must end with a letter or number
+		if ( $element !~ /[a-z0-9]$/ ) {
+			return $self->withReason( "Domain section '$element' must end with a letter or number" );
 		}
-		if ( $segment =~ /--/ ) {
-			return $self->withReason( 'Domain sections cannot have two dashes in a row' );
+
+		# Cannot have two consecutive dashes ( RFC doesn't say so that I can find... is this correct? )
+		if ( $element =~ /--/ ) {
+			return $self->withReason( "Domain sections '$element' cannot have two dashes in a row" );
 		}
 	}
-	
-	# Done, looks good
+
+	return 1 if $self->{depth} eq 'fast';
+
+	### Add tests for options
+
 	return 1;
 }
-		
+
 # Validate a host.
 # A host is EITHER an ip address, or a domain
 sub host {
 	my $self = shift->_self;
 	my $host = shift;
-	
+
 	# Does it look like an ip
-	if ( $host =~ /^[\d\.]+$/ ) {
+	if ( $host =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
 		return $self->ip( $host );
 	} else {
 		return $self->domain( $host );
@@ -137,28 +163,28 @@ sub host {
 sub port {
 	my $self = shift->_self;
 	my $port = shift;
-	
+
 	# A port must be all numbers
 	if ( $port =~ /[^0-9]/ ) {
 		return $self->withReason( 'A port number must be an integer' );
 	}
-	
+
 	# A port cannot start with 0
 	if ( $port =~ /^0/ ) {
 		return $self->withReason( 'A port number cannot start with zero' );
 	}
-	
-	# A port must be less than 65535
+
+	# A port must be less than or equal to 65535
 	if ( $port > 65535 ) {
 		return $self->withReason( 'The port number is too high' );
 	}
-	
+
 	# Otherwise OK
 	return 1;
 }
 
-		
-	
+
+
 
 #####################################################################
 # Error and Message Handling
@@ -166,7 +192,7 @@ sub port {
 sub andError   { $errstr = $_[1]; undef }
 sub withReason { $reason = $_[1]; '' }
 sub errstr     { $errstr }
-sub reason     { $reason }	
+sub reason     { $reason }
 
 1;
 
@@ -181,10 +207,10 @@ Validate::Net - Format validation and more for Net:: related strings
 =head1 SYNOPSIS
 
   use Validate::Net;
-  
+
   my $good = '123.1.23.123';
   my $bad = '123.432.21.12';
-  
+
   foreach ( $good, $bad ) {
   	if ( Validate::Net->ip( $_ ) ) {
   		print "'$_' is a valid ip\n";
@@ -194,12 +220,20 @@ Validate::Net - Format validation and more for Net:: related strings
   	}
   }
 
+  my $checker = Validate::Net->new( 'fast' );
+  unless ( $checker->host( 'foo.bar.blah' ) ) {
+  	print "You provided an invalid host";
+  }
+
 =head1 DESCRIPTION
 
-Validate::Net is a class designed to assist with validation internet related
-strings. It can be used to validate CGI forms, internally by modules, and
-in any place where you want to check that an internet related string is valid
-before handing it off to a Net::* class.
+Validate::Net is a class designed to assist with the validation of internet
+related strings. It can be used to validate CGI forms, internally by modules,
+and in any place where you want to check that an internet related string is
+valid before handing it off to a Net::* modules.
+
+It allows you to catch errors early, and with more detailed error messages
+than you are likely to get further down in the Net::* modules.
 
 Whenever a test is false, you can access the reason through the C<reason>
 method.
@@ -211,18 +245,23 @@ method.
 The C<host> method is used to see if a value is a valid host. That is, it is
 either a domain name, or an ip address.
 
-=head2 domain( $domain )
+=head2 domain( $domain [, @options ] )
 
-The C<domain> method is used to check for a valid domain name.
+The C<domain> method is used to check for a valid domain name according to
+RFC 1034. It additionally disallows two consective dashes 'foo--bar'. I've
+never seen it used, and it's probably a mistaken version of 'foo-bar'.
+
+Depending on the options, additional checks may be made. No options are
+available at this time
 
 =head2 ip( $ip )
 
-The C<ip> method is used to validate the format, and more, of an ip address.
-If called with no options, it will just do a basic format check of the ip, 
-checking that it conforms to the basic dotted quad format. Depending on the
-options, additional checks may be made.
+The C<ip> method is used to validate the format, of an ip address.
+If called with no options, it will just do a basic format check of the ip,
+checking that it conforms to the basic dotted quad format.
 
-No options are available at this time
+Depending on the options, additional checks may be made. No options are
+available at this time
 
 =head2 port( $port )
 
@@ -231,6 +270,18 @@ The C<port> method is used to test for a valid port number.
 =head1 BUGS
 
 Unknown
+
+=head1 TO DO
+
+=over 4
+
+=item Add support for networks
+
+=item Add "exists" support
+
+=item Add "dns" support for host names
+
+=back
 
 =head1 SUPPORT
 

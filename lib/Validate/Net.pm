@@ -7,12 +7,12 @@ package Validate::Net;
 # which has a "medium" setting. Settings are discussed later.
 
 use strict;
-use Class::Default;
+use base qw{Class::Default};
 
 # Globals
 use vars qw{$VERSION $errstr $reason};
 BEGIN {
-	$VERSION = 0.1;
+	$VERSION = 0.2;
 	$errstr = '';
 	$reason = '' 
 }
@@ -34,7 +34,7 @@ sub new {
 		}, $class;
 	
 	# Set the depth
-	$self->setDepth( $depth ) or return undef;
+	$self->depth( $depth ) or return undef;
 	return $self;
 }
 

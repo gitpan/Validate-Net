@@ -7,3 +7,7 @@ MANIFEST
 Makefile.PL
 README
 lib/Validate/Net.pm
+t/01_main.t
+t/CVS/Entries
+t/CVS/Repository
+t/CVS/Root

@@ -1,28 +1,19 @@
 #!/usr/bin/perl
 
-# Formal testing for Class::Inspector
+# Formal testing for Validate::Net
 
 # Do all the tests on ourself, since we know we will be loaded.
 
 use strict;
-use lib '../../../modules'; # For development testing
-use lib '../lib'; # For installation testing
+use File::Spec::Functions qw{:ALL};
+use lib catdir( updir(), updir(), 'modules' ), # Development testing
+        catdir( updir(), 'lib' );              # Installation testing
 use UNIVERSAL 'isa';
 use Test::More tests => 35;
-use Class::Inspector;
-
-# Set up any needed globals
-use vars qw{$loaded};
-BEGIN {
-	$loaded = 0;
-	$| = 1;
-}
-
-
-
 
 # Check their perl version
 BEGIN {
+	$| = 1;
 	ok( $] >= 5.005, "Your perl is new enough" );
 }
 
@@ -31,10 +22,7 @@ BEGIN {
 
 
 # Does the module load
-END { ok( 0, 'Validate::Net loads' ) unless $loaded; }
-use Validate::Net;
-$loaded = 1;
-ok( 1, 'Validate::Net loads' );
+use_ok( 'Validate::Net' );
 
 
 

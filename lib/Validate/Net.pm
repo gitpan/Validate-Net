@@ -7,12 +7,12 @@ package Validate::Net;
 # which has a "medium" setting. Settings are discussed later.
 
 use strict;
-use base qw{Class::Default};
+use base 'Class::Default';
 
 # Globals
 use vars qw{$VERSION $errstr $reason};
 BEGIN {
-	$VERSION = 0.4;
+	$VERSION = 0.5;
 	$errstr = '';
 	$reason = ''
 }
@@ -35,7 +35,7 @@ sub new {
 
 	# Set the depth
 	$self->depth( $depth ) or return undef;
-	return $self;
+	$self;
 }
 
 sub depth {
@@ -50,7 +50,7 @@ sub depth {
 		return $self->andError( "Invalid depth '$depth'. Valid depths are 'fast', 'local'(default) or 'full'" );
 	}
 	$self->{depth} = $depth;
-	return 1;
+	1;
 }
 
 
@@ -87,7 +87,7 @@ sub ip {
 
 	### Add tests for options
 
-	return 1;
+	1;
 }
 
 # Validate a full or partial domain name, or just a host name
@@ -142,7 +142,7 @@ sub domain {
 
 	### Add tests for options
 
-	return 1;
+	1;
 }
 
 # Validate a host.
@@ -151,12 +151,10 @@ sub host {
 	my $self = shift->_self;
 	my $host = shift;
 
-	# Does it look like an ip
-	if ( $host =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
-		return $self->ip( $host );
-	} else {
-		return $self->domain( $host );
-	}
+	# Test as an ip or a domain
+	$host =~ /^\d+\.\d+\.\d+\.\d+$/
+		? $self->ip( $host )
+		: $self->domain( $host );
 }
 
 # Validate a port number
@@ -180,7 +178,7 @@ sub port {
 	}
 
 	# Otherwise OK
-	return 1;
+	1;
 }
 
 
@@ -202,7 +200,7 @@ __END__
 
 =head1 NAME
 
-Validate::Net - Format validation and more for Net:: related strings
+Validate::Net - Format validation for Net:: related strings
 
 =head1 SYNOPSIS
 
@@ -240,12 +238,12 @@ method.
 
 =head1 METHODS
 
-=head2 host( $host )
+=head2 host $host
 
 The C<host> method is used to see if a value is a valid host. That is, it is
 either a domain name, or an ip address.
 
-=head2 domain( $domain [, @options ] )
+=head2 domain $domain [, @options ]
 
 The C<domain> method is used to check for a valid domain name according to
 RFC 1034. It additionally disallows two consective dashes 'foo--bar'. I've
@@ -254,7 +252,7 @@ never seen it used, and it's probably a mistaken version of 'foo-bar'.
 Depending on the options, additional checks may be made. No options are
 available at this time
 
-=head2 ip( $ip )
+=head2 ip $ip
 
 The C<ip> method is used to validate the format, of an ip address.
 If called with no options, it will just do a basic format check of the ip,
@@ -263,7 +261,7 @@ checking that it conforms to the basic dotted quad format.
 Depending on the options, additional checks may be made. No options are
 available at this time
 
-=head2 port( $port )
+=head2 port $port
 
 The C<port> method is used to test for a valid port number.
 
@@ -272,6 +270,9 @@ The C<port> method is used to test for a valid port number.
 Unknown
 
 =head1 TO DO
+
+This module is not all that completed. Just enough to do some basics. Feel
+free to send me patches to add anything you like.
 
 =over 4
 
@@ -299,7 +300,7 @@ Net::*
 
 =head1 COPYRIGHT
 
-Copyright (c) 2002 Adam Kennedy. All rights reserved.
+Copyright (c) 2002-2003 Adam Kennedy. All rights reserved.
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 

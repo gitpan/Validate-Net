@@ -1,5 +1,5 @@
 NAME
-    Validate::Net - Format validation and more for Net:: related strings
+    Validate::Net - Format validation for Net:: related strings
 
 SYNOPSIS
       use Validate::Net;
@@ -35,11 +35,11 @@ DESCRIPTION
     method.
 
 METHODS
-  host( $host )
+  host $host
     The "host" method is used to see if a value is a valid host. That is, it
     is either a domain name, or an ip address.
 
-  domain( $domain [, @options ] )
+  domain $domain [, @options ]
     The "domain" method is used to check for a valid domain name according
     to RFC 1034. It additionally disallows two consective dashes 'foo--bar'.
     I've never seen it used, and it's probably a mistaken version of
@@ -48,7 +48,7 @@ METHODS
     Depending on the options, additional checks may be made. No options are
     available at this time
 
-  ip( $ip )
+  ip $ip
     The "ip" method is used to validate the format, of an ip address. If
     called with no options, it will just do a basic format check of the ip,
     checking that it conforms to the basic dotted quad format.
@@ -56,13 +56,16 @@ METHODS
     Depending on the options, additional checks may be made. No options are
     available at this time
 
-  port( $port )
+  port $port
     The "port" method is used to test for a valid port number.
 
 BUGS
     Unknown
 
 TO DO
+    This module is not all that completed. Just enough to do some basics.
+    Feel free to send me patches to add anything you like.
+
     Add support for networks
     Add "exists" support
     Add "dns" support for host names
@@ -79,9 +82,9 @@ SEE ALSO
     Net::*
 
 COPYRIGHT
-    Copyright (c) 2002 Adam Kennedy. All rights reserved. This program is
-    free software; you can redistribute it and/or modify it under the same
-    terms as Perl itself.
+    Copyright (c) 2002-2003 Adam Kennedy. All rights reserved. This program
+    is free software; you can redistribute it and/or modify it under the
+    same terms as Perl itself.
 
     The full text of the license can be found in the LICENSE file included
     with this module.

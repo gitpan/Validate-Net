@@ -6,15 +6,16 @@ package Validate::Net;
 # We use Class::Default to allow us to create a "default" validator
 # which has a "medium" setting. Settings are discussed later.
 
+use 5.005;
 use strict;
 use base 'Class::Default';
 
 # Globals
 use vars qw{$VERSION $errstr $reason};
 BEGIN {
-	$VERSION = 0.5;
-	$errstr = '';
-	$reason = ''
+	$VERSION = '0.6';
+	$errstr  = '';
+	$reason  = ''
 }
 
 
@@ -286,13 +287,15 @@ free to send me patches to add anything you like.
 
 =head1 SUPPORT
 
-Contact the author
+Bugs should be reported via the CPAN bug tracking system
+
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Validate-Net>
+
+For other inquiries, contact the author
 
 =head1 AUTHOR
 
-        Adam Kennedy
-        cpan@ali.as
-        http://ali.as/
+Adam Kennedy E<lt>adamk@cpan.orgE<gt>
 
 =head1 SEE ALSO
 
@@ -300,7 +303,8 @@ Net::*
 
 =head1 COPYRIGHT
 
-Copyright (c) 2002-2003 Adam Kennedy. All rights reserved.
+Copyright 2002 - 2008 Adam Kennedy.
+
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 

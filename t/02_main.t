@@ -2,27 +2,14 @@
 
 # Formal testing for Validate::Net
 
-# Do all the tests on ourself, since we know we will be loaded.
-
 use strict;
-use File::Spec::Functions qw{:ALL};
-use lib catdir( updir(), updir(), 'modules' ), # Development testing
-        catdir( updir(), 'lib' );              # Installation testing
-use UNIVERSAL 'isa';
-use Test::More tests => 35;
-
-# Check their perl version
 BEGIN {
-	$| = 1;
-	ok( $] >= 5.005, "Your perl is new enough" );
+	$|  = 1;
+	$^W = 1;
 }
 
-
-
-
-
-# Does the module load
-use_ok( 'Validate::Net' );
+use Test::More tests => 33;
+use Validate::Net;
 
 
 
